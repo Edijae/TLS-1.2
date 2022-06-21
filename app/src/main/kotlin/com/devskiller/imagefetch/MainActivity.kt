@@ -111,15 +111,12 @@ class MainActivity : AppCompatActivity() {
 
     //Returns instance of X509TrustManager which manage which X509 certificates
     // may be used to authenticate the remote side of a secure socket
-    fun findX509TrustManager():X509TrustManager?{
+    private fun findX509TrustManager():X509TrustManager?{
         TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm()).apply{
             init(null as KeyStore?)
             trustManagers.also{ it ->
-                if(it.isEmpty()){
-                    Log.e("TLS", "No TrustManager instances")
-                }else{
+                if(it.isNotEmpty()){
                     (it[0] as? X509TrustManager)?.also{ return it}
-                    Log.e("TLS", "TrustManager[0] is not X509")
                 }
             }
             return null

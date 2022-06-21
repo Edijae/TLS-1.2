@@ -1,5 +1,6 @@
 package com.devskiller.imagefetch
 
+import okhttp3.TlsVersion
 import java.io.IOException
 import java.net.InetAddress
 import java.net.Socket
@@ -8,8 +9,6 @@ import javax.net.ssl.SSLSocket
 import javax.net.ssl.SSLSocketFactory
 
 class Tls12SocketFactory(val delegate: SSLSocketFactory): SSLSocketFactory(){
-
-    private  val TLS_V12_ONLY = arrayOf("TLSv1.2")
 
     override fun getDefaultCipherSuites(): Array<String>{
         return delegate.defaultCipherSuites
@@ -44,9 +43,9 @@ class Tls12SocketFactory(val delegate: SSLSocketFactory): SSLSocketFactory(){
         return patch(delegate.createSocket(address, port, localAddress, localPort))
     }
 
-    fun patch(socket:Socket):Socket{
+    private fun patch(socket:Socket):Socket{
         if(socket is SSLSocket){
-            socket.enabledProtocols = TLS_V12_ONLY
+            socket.enabledProtocols = arrayOf(TlsVersion.TLS_1_2.javaName())
         }
         return socket;
     }
