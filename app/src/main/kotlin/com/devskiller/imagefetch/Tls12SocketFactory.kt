@@ -7,7 +7,7 @@ import java.net.UnknownHostException
 import javax.net.ssl.SSLSocket
 import javax.net.ssl.SSLSocketFactory
 
-class Tls12SocketFactory(internal val delegate: SSLSocketFactory): SSLSocketFactory(){
+class Tls12SocketFactory(val delegate: SSLSocketFactory): SSLSocketFactory(){
 
     private  val TLS_V12_ONLY = arrayOf("TLSv1.2")
 
@@ -44,7 +44,7 @@ class Tls12SocketFactory(internal val delegate: SSLSocketFactory): SSLSocketFact
         return patch(delegate.createSocket(address, port, localAddress, localPort))
     }
 
-    private fun patch(socket:Socket):Socket{
+    fun patch(socket:Socket):Socket{
         if(socket is SSLSocket){
             socket.enabledProtocols = TLS_V12_ONLY
         }
