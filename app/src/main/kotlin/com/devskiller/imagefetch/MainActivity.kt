@@ -4,18 +4,16 @@ import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
-import com.squareup.picasso.Callback
-import com.squareup.picasso.MemoryPolicy
-import com.squareup.picasso.NetworkPolicy
-import com.squareup.picasso.OkHttp3Downloader
-import com.squareup.picasso.Picasso
+import com.squareup.picasso.*
 import kotlinx.android.synthetic.main.activity_main.*
 import okhttp3.ConnectionSpec
 import okhttp3.OkHttpClient
 import okhttp3.TlsVersion
 import java.lang.ref.WeakReference
 import java.security.KeyStore
+import java.util.*
 import javax.net.ssl.SSLContext
+import javax.net.ssl.TrustManager
 import javax.net.ssl.TrustManagerFactory
 import javax.net.ssl.X509TrustManager
 
@@ -88,10 +86,34 @@ class MainActivity : AppCompatActivity() {
             // START CHANGES
             try{
                 //Returns a SSLContext object that implements the specified secure socket protocol.
-                SSLContext.getInstance("TLSv1.2").also{
+                val trustManagerFactory = TrustManagerFactory.getInstance(
+                    TrustManagerFactory.getDefaultAlgorithm()
+                )
+                trustManagerFactory.init(null as KeyStore?)
+                val trustManagers: Array<TrustManager> = trustManagerFactory.trustManagers
+                check(!(trustManagers.size != 1 || trustManagers[0] !is X509TrustManager)) {
+                    ("Unexpected default trust managers:"
+                            + Arrays.toString(trustManagers))
+                }
+                val trustManager = trustManagers[0] as X509TrustManager
+
+                val sslContext = SSLContext.getInstance("TLSv1.2")
+                sslContext.init(null, arrayOf(trustManager), null)
+                //val sslSocketFactory: SSLSocketFactory = sslContext.socketFactory
+
+                sslSocketFactory(sslContext.socketFactory, trustManager)
+                connectionSpecs(arrayListOf(
+                    ConnectionSpec.Builder(ConnectionSpec.MODERN_TLS)
+                        .tlsVersions(TlsVersion.TLS_1_2)
+                        .build(),
+                    ConnectionSpec.COMPATIBLE_TLS,
+                    ConnectionSpec.CLEARTEXT)
+                )
+
+               /* SSLContext.getInstance("TLSv1.2").also{
                     it.init(null,null,null)
                     findX509TrustManager()?.also{ trust ->
-                        sslSocketFactory(Tls12SocketFactory(it.socketFactory), trust)
+                        sslSocketFactory(sslContext.socketFactory, trust)
                         connectionSpecs(arrayListOf(
                             ConnectionSpec.Builder(ConnectionSpec.MODERN_TLS)
                                 .tlsVersions(TlsVersion.TLS_1_2)
@@ -100,7 +122,7 @@ class MainActivity : AppCompatActivity() {
                             ConnectionSpec.CLEARTEXT)
                         )
                     }
-                }
+                }*/
             }catch(exc: Exception){
                 Log.e("enableTls12","exception", exc)
             }
