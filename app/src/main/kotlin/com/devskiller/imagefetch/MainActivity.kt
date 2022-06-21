@@ -11,11 +11,9 @@ import okhttp3.OkHttpClient
 import okhttp3.TlsVersion
 import java.lang.ref.WeakReference
 import java.security.KeyStore
+import java.security.SecureRandom
 import java.util.*
-import javax.net.ssl.SSLContext
-import javax.net.ssl.TrustManager
-import javax.net.ssl.TrustManagerFactory
-import javax.net.ssl.X509TrustManager
+import javax.net.ssl.*
 
 class MainActivity : AppCompatActivity() {
 
@@ -85,35 +83,16 @@ class MainActivity : AppCompatActivity() {
         if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.LOLLIPOP) {
             // START CHANGES
             try{
-                //Returns a SSLContext object that implements the specified secure socket protocol.
-                val trustManagerFactory = TrustManagerFactory.getInstance(
-                    TrustManagerFactory.getDefaultAlgorithm()
-                )
-                trustManagerFactory.init(null as KeyStore?)
-                val trustManagers: Array<TrustManager> = trustManagerFactory.trustManagers
-                check(!(trustManagers.size != 1 || trustManagers[0] !is X509TrustManager)) {
-                    ("Unexpected default trust managers:"
-                            + Arrays.toString(trustManagers))
-                }
-                val trustManager = trustManagers[0] as X509TrustManager
-
                 val sslContext = SSLContext.getInstance("TLSv1.2")
-                sslContext.init(null, arrayOf(trustManager), null)
-                //val sslSocketFactory: SSLSocketFactory = sslContext.socketFactory
-
-                sslSocketFactory(sslContext.socketFactory, trustManager)
-                connectionSpecs(arrayListOf(
-                    ConnectionSpec.Builder(ConnectionSpec.MODERN_TLS)
-                        .tlsVersions(TlsVersion.TLS_1_2)
-                        .build(),
-                    ConnectionSpec.COMPATIBLE_TLS,
-                    ConnectionSpec.CLEARTEXT)
-                )
-
-               /* SSLContext.getInstance("TLSv1.2").also{
+                sslContext.init(null, null, SecureRandom())
+                val noSSLv3Factory: SSLSocketFactory = Tls12SocketFactory(sslContext.socketFactory)
+                sslSocketFactory(noSSLv3Factory)
+                //Returns a SSLContext object that implements the specified secure socket protocol.
+/*
+                SSLContext.getInstance("TLSv1.2").also{
                     it.init(null,null,null)
                     findX509TrustManager()?.also{ trust ->
-                        sslSocketFactory(sslContext.socketFactory, trust)
+                        sslSocketFactory(Tls12SocketFactory(it.socketFactory), trust)
                         connectionSpecs(arrayListOf(
                             ConnectionSpec.Builder(ConnectionSpec.MODERN_TLS)
                                 .tlsVersions(TlsVersion.TLS_1_2)
@@ -122,7 +101,8 @@ class MainActivity : AppCompatActivity() {
                             ConnectionSpec.CLEARTEXT)
                         )
                     }
-                }*/
+                }
+*/
             }catch(exc: Exception){
                 Log.e("enableTls12","exception", exc)
             }
