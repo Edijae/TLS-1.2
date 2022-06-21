@@ -83,12 +83,7 @@ class MainActivity : AppCompatActivity() {
         if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.LOLLIPOP) {
             // START CHANGES
             try{
-                val sslContext = SSLContext.getInstance("TLSv1.2")
-                sslContext.init(null, null, SecureRandom())
-                val noSSLv3Factory: SSLSocketFactory = Tls12SocketFactory(sslContext.socketFactory)
-                sslSocketFactory(noSSLv3Factory)
                 //Returns a SSLContext object that implements the specified secure socket protocol.
-/*
                 SSLContext.getInstance("TLSv1.2").also{
                     it.init(null,null,null)
                     findX509TrustManager()?.also{ trust ->
@@ -102,7 +97,6 @@ class MainActivity : AppCompatActivity() {
                         )
                     }
                 }
-*/
             }catch(exc: Exception){
                 Log.e("enableTls12","exception", exc)
             }
