@@ -10,6 +10,7 @@ object SslContextPreparator {
         trustManager: X509TrustManager
     ) {
         // START CHANGES
+        sslContext.init(null, arrayOf(trustManager),null)
         // END CHANGES
     }
 }

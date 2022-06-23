@@ -8,7 +8,7 @@ import java.net.UnknownHostException
 import javax.net.ssl.SSLSocket
 import javax.net.ssl.SSLSocketFactory
 
-class Tls12SocketFactory(val delegate: SSLSocketFactory): SSLSocketFactory(){
+class Tls12SocketFactory(private val delegate: SSLSocketFactory): SSLSocketFactory(){
 
     override fun getDefaultCipherSuites(): Array<String>{
         return delegate.defaultCipherSuites
