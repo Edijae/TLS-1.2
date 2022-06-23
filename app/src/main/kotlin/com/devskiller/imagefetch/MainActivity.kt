@@ -82,21 +82,37 @@ class MainActivity : AppCompatActivity() {
     private fun OkHttpClient.Builder.enableTls12OnPreLollipop(): OkHttpClient.Builder = apply {
         if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.LOLLIPOP) {
             // START CHANGES
-            val manager = CustomTrustManager()
-            val context = SSLContext.getInstance("TLSv1.2")
-            sslContextPreparator(context,manager)
-            sslSocketFactory(Tls12SocketFactory(context.socketFactory), manager)
-            connectionSpecs(arrayListOf(
-                ConnectionSpec.Builder(ConnectionSpec.MODERN_TLS)
-                    .tlsVersions(TlsVersion.TLS_1_2)
-                    .build(),
-                ConnectionSpec.COMPATIBLE_TLS,
-                ConnectionSpec.CLEARTEXT)
-            )
+            findX509TrustManager()?.let {
+                val context = SSLContext.getInstance("TLSv1.2")
+                sslContextPreparator(context,it)
+                sslSocketFactory(Tls12SocketFactory(context.socketFactory), it)
+                connectionSpecs(arrayListOf(
+                    ConnectionSpec.Builder(ConnectionSpec.MODERN_TLS)
+                        .tlsVersions(TlsVersion.TLS_1_2)
+                        .build(),
+                    ConnectionSpec.COMPATIBLE_TLS,
+                    ConnectionSpec.CLEARTEXT)
+                )
+            }
+
             // END CHANGES
         }
         return this
     }
+    //Returns instance of X509TrustManager which manage which X509 certificates
+    // may be used to authenticate the remote side of a secure socket
+    private fun findX509TrustManager():X509TrustManager?{
+        TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm()).apply{
+            init(null as KeyStore?)
+            trustManagers.also{ it ->
+                if(it.isNotEmpty()){
+                    (it[0] as? X509TrustManager)?.also{ return it}
+                }
+            }
+            return null
+        }
+    }
+
     private fun imageFetchedSuccessfully() = Log.v(LOG_TAG, "image fetched successfully!")
 
     private fun imageFetchedWithFailure(exception: Exception) = Log.v(LOG_TAG, "image fetched unsuccessfully!:$exception")
